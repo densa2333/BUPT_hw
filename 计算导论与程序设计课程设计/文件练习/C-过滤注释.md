@@ -59,10 +59,10 @@ int main()
 
 int main()
 {
-        int a = 10 , b = 2 , c ;
-        c = a / b ;
-        printf("I love programming C.\n") ;
-        printf("I hope you love it too!\n") ;
+    int a = 10 , b = 2 , c ;
+    c = a / b ;
+    printf("I love programming C.\n") ;
+       printf("I hope you love it too!\n") ;
 
         return 0 ;
 }
@@ -72,6 +72,207 @@ int main()
 
 ## 解
 
+- 对字符串逐行操作的思想很重要  
+
+### 第一次尝试 ：fgetc定位 + 逐字符处理的过滤算法（OLE）
+
 ```C
+#include<stdio.h>
+
+int main()
+{
+    int i, n, num[6], line = 6;
+    char ch1, ch2;
+    long front, rear;
+    scanf("%d", &n);
+    FILE *fp = NULL;
+    if ((fp = fopen("dict.dic", "r")) == NULL)
+        printf("Can't open the file.\n");
+    else {
+        num[0] = 5;
+
+        for (i = 1; i < 6; i++)
+          fscanf(fp ,"%d\n", &num[i]);
+        while ((line != (num[n - 1] + 1)) && ((ch1 = fgetc(fp)) != EOF)) {
+            if (ch1 == '\n') line++;
+        }
+        front = ftell(fp);
+        while ((line != num[n] + 1) && (ch1 = fgetc(fp)) != EOF) {
+            if (ch1 == '\n') line++;
+        }
+        rear = ftell(fp);
+        fseek(fp, front, 0);
+
+        ch1 = fgetc(fp);
+        while (ftell(fp) != rear) {
+            if (ch1 == '/') {
+                ch2 = fgetc(fp);
+                if (ch2 == '/') {
+                    for (ch1 = fgetc(fp); ch1 != '\n'; ch1 = fgetc(fp));
+                    printf("%c", ch1);
+                } else if (ch2 == '*') {
+                    do {
+                        for (ch1 = fgetc(fp); ch1 != '*' && ch1 != EOF; ch1 = fgetc(fp));
+                        if (ch1 == EOF) break;
+                    } while (ch1 = fgetc(fp) != '/');
+                    if (ch1 == EOF) break;
+                } else {
+                    printf("%c%c", ch1, ch2);
+                }
+            } else {
+                printf("%c", ch1);
+            }
+            ch1 = fgetc(fp);
+        }
+    }
+    fclose(fp); //OLE不是没关文件的问题
+    return 0;
+}
+```
+
+
+
+### 第二次尝试 ：fgets定位 + 逐字符处理的过滤算法（OLE）
+
+```C
+#include<stdio.h>
+
+int main()
+{
+    int i, n, num[6], line = 6;
+    char ch1, ch2;
+    char s[1000];
+    long front, rear;
+    scanf("%d", &n);
+    FILE *fp = NULL;
+    if ((fp = fopen("dict.dic", "r")) == NULL)
+        printf("Can't open the file.\n");
+    else {
+        num[0] = 5;
+
+        for (i = 1; i < 6; i++)
+          fscanf(fp ,"%d\n", &num[i]);
+        while (line != (num[n - 1] + 1) && !feof(fp)) {
+            fgets(s, sizeof(s), fp);
+            line++;
+        }
+        front = ftell(fp);
+        while (line != (num[n] + 1) && !feof(fp)) {
+            fgets(s, sizeof(s), fp);
+            line++;
+        }
+        rear = ftell(fp);
+        fseek(fp, front, 0);
+
+        ch1 = fgetc(fp);
+        while (ftell(fp) != rear) {
+            if (ch1 == '/') {
+                ch2 = fgetc(fp);
+                if (ch2 == '/') {
+                    for (ch1 = fgetc(fp); ch1 != '\n'; ch1 = fgetc(fp));
+                    printf("%c", ch1);
+                } else if (ch2 == '*') {
+                    do {
+                        for (ch1 = fgetc(fp); ch1 != '*' && ch1 != EOF; ch1 = fgetc(fp));
+                        if (ch1 == EOF) break;
+                    } while (ch1 = fgetc(fp) != '/');
+                    if (ch1 == EOF) break;
+                } else {
+                    printf("%c%c", ch1, ch2);
+                }
+            } else {
+                printf("%c", ch1);
+            }
+            ch1 = fgetc(fp);
+        }
+    }
+    fclose(fp);
+    return 0;
+}
+```
+
+
+
+### 第三次尝试：fgets定位 + 逐行处理的过滤算法（AC）
+
+```C
+#include<stdio.h>
+
+void Filter(int, int *);
+
+int main()
+{
+    int i, n, num[6];
+    scanf("%d", &n);
+    FILE *fp = NULL;
+    if ((fp = fopen("dict.dic", "r")) == NULL)
+        printf("Can't open the file.\n");
+    else {
+        num[0] = 5;
+        for (i = 1; i < 6; i++)
+          fscanf(fp ,"%d\n", &num[i]);
+        fclose(fp);
+        Filter(n, num);
+    } 
+    return 0;
+}
+
+void Filter(int n, int *num)
+{
+    int count = 0;
+    char c, c1, c2;
+    char s[1000];
+    FILE * fp = fopen("dict.dic", "r");
+    while (count != num[n - 1]) {
+        fgets(s, sizeof(s), fp);
+        count++;
+    }
+    count = 0;
+    while (count != num[n] - num[n - 1]) {
+        c = fgetc(fp);
+        if (feof(fp))
+          return;
+        if (c == '/') {
+            c1 = c;
+            c2 = fgetc(fp);
+            if (c1 == '/' && c2 == '*') {
+                while (!feof(fp)) {
+                    c = fgetc(fp);
+                    c2 = c;
+                    if (c1 == '*' && c2 == '/') {
+                        c1 = '\0';
+                        c2 = '\0';
+                        break;
+                    }
+                    c1 = c2;
+                    if (c == '\n') {
+                        count++;
+                    }
+                    if (count > num[n] - num[n - 1])
+                        return;
+                }
+            } else if (c1 == '/' && c2 == '/') {
+                while (!feof(fp)) {
+                    c = fgetc(fp);
+                    if (c == '\n') {
+                        c = '\0';
+                        c1 = '\0';
+                        c2 = '\0';
+                        count++;
+                        printf("\n");
+                        break;
+                    }
+                }
+            } else {
+                printf("%c%c", c1, c2);
+            }
+        } else {
+            printf("%c", c);
+        }
+        if (c == '\n' || feof(fp) == -1)
+        count++;
+    }
+    fclose(fp);
+}
 ```
 

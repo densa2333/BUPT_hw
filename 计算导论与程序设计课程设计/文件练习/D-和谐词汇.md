@@ -59,6 +59,87 @@ Sweet delusion... you !@#$%^&* so far away right now that all I can ask for !@#$
 
 ## 解
 
+- 从词库文件中取词
+-  **逐行** 处理输入
+
 ```C
+#include<stdio.h>
+
+void GetWords(char [][11]);				// review the syntax of function parameter
+void Harmonize(char [][11], char *);
+int Compare(char *, char [][11]);
+
+int main()
+{
+    int cnt;
+    char s[11][11] = {0}; 		// use two-dimension array to store the words
+    char textline[111];			// harmonize the text line by line
+    GetWords(s);
+    while (gets(textline)) { 	// gets() to get every line
+        if (textline[0] == EOF) return 0; 	// if get ^Z, then return
+        for (cnt = 0; textline[cnt]; cnt++);// guarantee correct output
+        textline[cnt] = '\n';		// replenish the '\n'
+        textline[cnt + 1] = '\0';	// string end sign '\0'
+        Harmonize(s, textline);	// harmonize every line
+    }
+    return 0;
+}
+
+/* Get words from dict.dic */
+void GetWords(char s[][11])
+{
+    int i, j;
+    char c;
+    FILE *fp = NULL;
+    if ((fp = fopen("dict.dic", "r")) == NULL)
+      printf("Can't open the file.\n");
+    else { 												// open the file
+        i = 0;
+        while ((c = fgetc(fp)) != EOF) { 	// words loop
+            for (j = 0; j < 10 && c != '\n'; j++) {		// letters loop, fgetc while '\n'
+                s[i][j] = c;
+                c = fgetc(fp);
+            }
+            s[i][10] = j;	// store the length of every word
+            i++;
+        }
+    }
+}
+
+/* Harmonize one line */
+void Harmonize(char s[][11], char *textline)
+{
+    int i = 0, n;	// i points the location of every letter, n means the number of letters
+    while (textline[i]) { 				//check word by word
+        n = Compare(textline + i, s);	// compare the following letters
+        if (n != -1) {					// need to harmon
+            printf("!@#$%^&*");
+            i += s[n][10];	// i moves to the end of the word
+        } else {
+            printf("%c", textline[i]);	// no need to harmonize
+            i++;			// i moves to next word
+        }
+    }
+}
+
+/* Judge the word */
+int Compare(char *text, char s[][11])
+{
+    int i = 0, j, flag;
+    while (s[i][0]) {	// loop of words library
+        flag = 1;
+        j = 0;
+        while (s[i][j] && text[j]) {	// loop of letters
+            if (text[j] != s[i][j]) {	// not the same then find next word in library
+                flag = 0;
+                break;
+            }
+            j++;
+        }
+        if (flag) return i;	// if find in the library, then return the word length
+        i++;
+    }
+    return -1;	// if not in the library, then return -1
+}
 ```
 

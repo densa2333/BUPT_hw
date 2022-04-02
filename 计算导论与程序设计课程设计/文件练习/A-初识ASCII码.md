@@ -130,6 +130,8 @@ others: 36
 
 ## 解
 
+- 必须掌握的 ASCII 码处理思想
+
 ```C
 #include<stdio.h>
 #include<stdlib.h>
